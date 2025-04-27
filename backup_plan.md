@@ -1,32 +1,3 @@
-### 📥 **Backup Plan**  
-*(Run this on your current system)*  
-
-1. **Save Configs & Dotfiles**  
-   ```bash  
-   tar -czvf ~/my-configs.tar.gz ~/.zshrc ~/.bashrc ~/.config ~/.local
-   ```  
-   *(This bundles your terminal/config files into `my-configs.tar.gz`)*  
-
-2. **Export GNOME Settings**  
-   ```bash  
-   dconf dump / > ~/gnome-settings.ini  
-   ```  
-   *(Saves all GNOME shortcuts, themes, and tweaks)*  
-
-3. **Backup Installed Packages**  
-   ```bash  
-   pacman -Qqe > ~/pkglist.txt  
-   ```  
-   *(Lists all explicitly installed apps/packages)*  
-
-4. **Optional: Save Pacman Configs**  
-   ```bash  
-   sudo cp /etc/pacman.conf /etc/pacman.d/mirrorlist ~/  
-   ```  
-   *(Backup your package manager settings)*  
-
----
-
 ### 📤 **Restore Plan**  
 *(On the new Arch system after installation)*  
 
@@ -35,12 +6,14 @@
    - `my-configs.tar.gz`  
    - `gnome-settings.ini`  
    - `pkglist.txt`  
-   - (Optional) `pacman.conf`, `mirrorlist`  
+   - `pacman.conf`, `mirrorlist`
+   - `boot-optimizations/`
 
-2. **Restore Pacman Configs (Optional)**  
+2. **Restore Pacman Configs**  
    ```bash  
-   sudo cp ~/pacman.conf /etc/  
-   sudo cp ~/mirrorlist /etc/pacman.d/  
+   sudo cp pacman.conf /etc/  
+   sudo cp mirrorlist /etc/pacman.d/  
+   sudo pacman -Syu  
    ```  
 
 3. **Install Packages**  
@@ -57,4 +30,26 @@
 5. **Apply GNOME Settings**  
    ```bash  
    dconf load / < ~/gnome-settings.ini  
+   ```
+
+6. **Restore Boot Optimizations**
+   ```bash
+   # Rebuild GRUB  
+   sudo cp boot-optimizations/grub /etc/default/  
+   sudo grub-mkconfig -o /boot/grub/grub.cfg  
+
+   # Rebuild initramfs  
+   sudo cp boot-optimizations/mkinitcpio.conf /etc/  
+   sudo mkinitcpio -P  
+
+   # Apply systemd tweaks  
+   sudo cp boot-optimizations/system.conf /etc/systemd/  
+   sudo systemctl daemon-reload  
+   ```
+
+7. **Verify**
+   ```bash
+   systemd-analyze time  # Check boot time  
+   cat /proc/cmdline     # Confirm "loglevel=0 quiet"  
+   systemctl start docker ollama  # Test optional services  
    ```
